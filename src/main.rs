@@ -41,32 +41,36 @@ fn detect_sensors() -> Result <plist::Value, Box<dyn Error>> {
 
 fn print_envsys(data: &plist::Value) {
     if let plist::Value::Dictionary(dict) = data {
-	for (key, kvalue) in dict {
+	for (key, value) in dict {
 	    println!("sensor {}", key);
-	    match &kvalue {
-		plist::Value::Array(a) => {
-		    for entry in a {
-			match &entry {
-			    plist::Value::Dictionary(dict2) => {
-				if let Some(plist::Value::String(description)) = dict2.get("description") {
-				    println!("\tsub-sensor {}", description);
-				    for (key2, value2) in dict2 {
-					println!("\t\t{} => {:?}", key2, value2);
-				    }
-				}
-				if let Some(plist::Value::Dictionary(dev)) = dict2.get("device-properties") {
-				    println!("\tdevice properties:");
-				    for (key2, value2) in dev {
-					println!("\t\t{} => {:?}", key2, value2);
-				    }
-				}
-			    },
-			    _ => { println!("unexpected data") },
+	    if let plist::Value::Array(a) = value {
+		for entry in a {
+		    if let plist::Value::Dictionary(dict2) = entry {
+			if let Some(plist::Value::String(description)) = dict2.get("description") {
+			    println!("\tsub-sensor {}", description);
+			    for (key2, value2) in dict2 {
+				println!("\t\t{} => {:?}", key2, value2);
+			    }
+			}
+			else if let Some(plist::Value::Dictionary(dev)) = dict2.get("device-properties") {
+			    println!("\tdevice properties:");
+			    for (key2, value2) in dev {
+				println!("\t\t{} => {:?}", key2, value2);
+			    }
+			}
+			else {
+			    println!("unexpected data type (sensor data level)")
 			}
 		    }
-		},
-		_ => { println!("unexpected data") },
+		    else {
+			println!("unexpected data (sensor data level)")
+		    }
+		}
+	    } else {
+		println!("unexpected data (sensor level)")
 	    }
 	}
+    } else {
+	println!("unexpected data (toplevel)")
     }
 }
