@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 use plist::Value;
 use std::slice::from_raw_parts;
 use std::io::Cursor;
+use std::process;
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -19,13 +20,14 @@ pub struct plistref {
 ioctl_readwrite!(envsys_getdictionary, b'E', 0, plistref);
 
 fn main() {
-    match detect_sensors() {
-	Ok(_) => (),
-	Err(err) => println!("error: {}", err),
-    }	
+    let envsys_data = detect_sensors().unwrap_or_else(|err| {
+	println!("error: {}", err);
+	process::exit(1);
+    });
+    print_envsys(&envsys_data);
 }
 
-fn detect_sensors() -> Result <(), Box<dyn Error>> {
+fn detect_sensors() -> Result <plist::Value, Box<dyn Error>> {
     let envsys = File::open("/dev/sysmon")?;
     let mut dict = MaybeUninit::<plistref>::uninit();
     let _res = unsafe { envsys_getdictionary(envsys.as_raw_fd(), dict.as_mut_ptr()) };
@@ -33,6 +35,38 @@ fn detect_sensors() -> Result <(), Box<dyn Error>> {
     let u8slice: &[u8] = unsafe { from_raw_parts(dict.pref_plist as *const u8, dict.pref_len) };
     let cursor = Cursor::new(u8slice);
     let value = Value::from_reader(cursor)?;
-    println!("{:?}", value);
-    Ok(())
+    //println!("{:?}", value);
+    Ok(value)
+}
+
+fn print_envsys(data: &plist::Value) {
+    if let plist::Value::Dictionary(dict) = data {
+	for (key, kvalue) in dict {
+	    println!("sensor {}", key);
+	    match &kvalue {
+		plist::Value::Array(a) => {
+		    for entry in a {
+			match &entry {
+			    plist::Value::Dictionary(dict2) => {
+				if let Some(plist::Value::String(description)) = dict2.get("description") {
+				    println!("\tsub-sensor {}", description);
+				    for (key2, value2) in dict2 {
+					println!("\t\t{} => {:?}", key2, value2);
+				    }
+				}
+				if let Some(plist::Value::Dictionary(dev)) = dict2.get("device-properties") {
+				    println!("\tdevice properties:");
+				    for (key2, value2) in dev {
+					println!("\t\t{} => {:?}", key2, value2);
+				    }
+				}
+			    },
+			    _ => { println!("unexpected data") },
+			}
+		    }
+		},
+		_ => { println!("unexpected data") },
+	    }
+	}
+    }
 }
