@@ -1,0 +1,32 @@
+sensor amdzentemp0
+	sub-sensor cpu0 temperature
+		cur-value => Integer(321900000)
+		description => String("cpu0 temperature")
+		index => String("sensor0")
+		monitoring-state-refresh-event => Boolean(true)
+		monitoring-supported => Boolean(true)
+		state => String("valid")
+		type => String("Temperature")
+	sub-sensor cpu0 ccd0 temperature
+		cur-value => Integer(313650000)
+		description => String("cpu0 ccd0 temperature")
+		index => String("sensor1")
+		monitoring-state-refresh-event => Boolean(true)
+		monitoring-supported => Boolean(true)
+		state => String("valid")
+		type => String("Temperature")
+	device properties:
+		device-class => String("other")
+		refresh-timeout => Integer(30)
+sensor amdzentemp1
+	sub-sensor cpu1 temperature
+		cur-value => Integer(314150000)
+		description => String("cpu1 temperature")
+		index => String("sensor0")
+		monitoring-state-refresh-event => Boolean(true)
+		monitoring-supported => Boolean(true)
+		state => String("valid")
+		type => String("Temperature")
+	device properties:
+		device-class => String("other")
+		refresh-timeout => Integer(30)

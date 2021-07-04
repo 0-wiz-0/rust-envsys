@@ -1,6 +1,9 @@
 This is example code how to get environmental sensor data on NetBSD
 using the [envsys(4)](https://man.netbsd.org/envsys.4) framework.
 
+Examples of the output of this program are in the [examples](examples)
+directory.
+
 If you want to deserialize the data yourself, the NetBSD kernel
 returns a plist in XML format (including a terminating zero byte,
 since it's a C string). The format looks like this:
